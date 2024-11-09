@@ -50,3 +50,11 @@
 
 # Embedded web-server pid file
 /.web-server-pid
+/node_modules
+
+# Symfony parameters (sensitive data)
+!.env
+!.env.local
+!.env.prod
+!.env.test
+*.env.local
