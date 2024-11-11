@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\RegistrationFormType;
+use App\Form\TwoFactorCodeType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -75,6 +76,31 @@ class SecurityController extends AbstractController
 
         return $this->render('security/register.html.twig', [
             'registrationForm' => $form->createView(),
+        ]);
+    }
+    #[Route('/verify-2fa', name: 'app_verify_2fa')]
+    public function verifyTwoFactor(Request $request): Response
+    {
+        $form = $this->createForm(TwoFactorCodeType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $session = $request->getSession();
+            $submittedCode = $form->get('code')->getData();
+
+            // Check if code matches and is still valid
+            if ($submittedCode === $session->get('2fa_code') && time() <= $session->get('2fa_expires_at')) {
+                $session->remove('2fa_code');
+                $session->remove('2fa_expires_at');
+
+                return $this->redirectToRoute('dashboard'); // or any authenticated route
+            } else {
+                $this->addFlash('error', 'Invalid or expired verification code.');
+            }
+        }
+
+        return $this->render('security/verify_2fa.html.twig', [
+            'form' => $form->createView(),
         ]);
     }
 }
