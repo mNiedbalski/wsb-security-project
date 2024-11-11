@@ -1,37 +1,32 @@
 security:
-    # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
-    # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
+
     providers:
-        users_in_memory: { memory: null }
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+
     firewalls:
-        dev:
-            pattern: ^/(_(profiler|wdt)|css|images|js)/
-            security: false
         main:
+            lazy: true
+            custom_authenticator: App\Security\LoginFormAuthenticator # Używamy niestandardowego authenticatora
+            # Use the custom authenticator to handle login flow
             form_login:
-                login_path: login
-                check_path: login
-                username_parameter: _username
-                password_parameter: _password
-                default_target_path: /dashboard
+                login_path: app_login  # The route for the login form
+                check_path: app_login  # The route for submitting the form
+                username_parameter: email  # Username field
+                password_parameter: password  # Password field
+                default_target_path: /dashboard  # Redirect after successful login
             logout:
-                path: /logout
-                target: /
-            # Podstawowe zabezpieczenie
-            security: true
+                path: app_logout
+                target: app_login  # Redirect to login page after logout
+            entry_point: App\Security\LoginFormAuthenticator
 
-            # activate different ways to authenticate
-            # https://symfony.com/doc/current/security.html#the-firewall
-
-            # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
-    # Easy way to control access for large sections of your site
-    # Note: Only the *first* access control that matches will be used
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/profile, roles: ROLE_USER }
 
 when@test:
     security:

@@ -1,37 +1,80 @@
-<?php /** @noinspection ALL */
+<?php
 
 namespace App\Controller;
 
-use App\Form\LoginFormType;
+use App\Entity\User;
+use App\Form\RegistrationFormType;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class SecurityController extends AbstractController
 {
-    #[Route('/login', name: 'login')]
-    public function login(Request $request): Response
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager,
+        private readonly UserPasswordHasherInterface $passwordHasher)
     {
-        // Tworzymy formularz logowania
-        $form = $this->createForm(LoginFormType::class);
-
-        // Sprawdzamy, czy formularz został wysłany i jeśli tak, sprawdzamy dane
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            // W tym miejscu można dodać logikę autoryzacji (np. sprawdzenie loginu)
-        }
+    }
+    #[Route('/login', name: 'app_login')]
+    public function login(AuthenticationUtils $authenticationUtils): Response
+    {
+        // Get the login error if there is one
+        $error = $authenticationUtils->getLastAuthenticationError();
+        $lastUsername = $authenticationUtils->getLastUsername();
 
         return $this->render('security/login.html.twig', [
-            'loginForm' => $form->createView(),
+            'last_username' => $lastUsername,
+            'error' => $error,
         ]);
     }
 
-    #[Route('/logout', name: 'logout')]
-    public function logout()
+    #[Route(path: '/logout', name: 'app_logout')]
+    public function logout(): void
     {
-        // Symfony automatycznie obsługuje tę trasę
+        throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
+    }
+    #[Route('/register', name: 'register')]
+    public function register(Request $request): Response
+    {
+        $user = new User();
+        $form = $this->createForm(RegistrationFormType::class, $user);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Check if the email already exists in the database
+            $existingUser = $this->entityManager->getRepository(User::class)->findOneBy([
+                'email' => $form->get('email')->getData(),
+            ]);
+
+            if ($existingUser) {
+                // If email exists, add an error message to the form
+                $form->get('email')->addError(new \Symfony\Component\Form\FormError('This email is already registered.'));
+                return $this->render('security/register.html.twig', [
+                    'registrationForm' => $form->createView(),
+                ]);
+            }
+
+            // If no existing user found, proceed with password hashing
+            $plainPassword = $form->get('plainPassword')->getData();
+            $hashedPassword = $this->passwordHasher->hashPassword($user, $plainPassword);
+
+            $user->setPassword($hashedPassword);
+
+            // Save the user to the database
+            $this->entityManager->persist($user);
+            $this->entityManager->flush();
+
+            return $this->redirectToRoute('app_login'); // Redirect to login page after successful registration
+        }
+
+        return $this->render('security/register.html.twig', [
+            'registrationForm' => $form->createView(),
+        ]);
     }
 }
-
