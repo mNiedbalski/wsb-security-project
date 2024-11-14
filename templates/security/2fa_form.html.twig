@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Two-Factor Authentication{% endblock %}
+
+{% block body %}
+
+    <h1>Two-Factor Authentication</h1>
+    <p>Enter google auth code</p>
+
+    {{ form_start(form) }}
+    {{ form_row(form.authCode) }}
+    <button class="btn">Verify</button>
+    {{ form_end(form) }}
+{% endblock %}

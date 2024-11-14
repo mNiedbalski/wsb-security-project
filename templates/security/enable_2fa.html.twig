@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Enable Two-Factor Authentication</h1>
+    <p>Scan the QR code with Google Authenticator:</p>
+    <img src="{{ qrCode }}" alt="QR Code for 2FA" />
+
+    <p>Once you have scanned the QR code, you can proceed to the dashboard.</p>
+
+    <a href="{{ path('dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+{% endblock %}

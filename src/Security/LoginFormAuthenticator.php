@@ -46,21 +46,6 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
         }
         return new RedirectResponse($this->urlGenerator->generate('app_verify_2fa'));
     }
-    public function sendTwoFactorCode(User $user, Request $request): void
-    {
-        $code = random_int(100000, 999999); // 6-digit code
-        $session = $request->getSession();
-        $session->set('2fa_code', $code);
-        $session->set('2fa_expires_at', time() + 300); // Code expires in 5 minutes
-
-        $email = (new Email())
-            ->from('no-reply@example.com')
-            ->to($user->getEmail())
-            ->subject('Your Two-Factor Authentication Code')
-            ->text("Your verification code is: $code");
-
-        $this->mailer->send($email);
-    }
 
 
     protected function getLoginUrl(Request $request): string

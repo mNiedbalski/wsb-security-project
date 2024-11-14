@@ -1,15 +1,21 @@
 <?php
 namespace App\Entity;
 
+use Scheb\TwoFactorBundle\Model\Google\TwoFactorInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
-class User implements UserInterface, PasswordAuthenticatedUserInterface
+class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFactorInterface
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'integer')]
     private int $id;
+
+    public function getId(): int
+    {
+        return $this->id;
+    }
 
     #[ORM\Column(type: 'string')]
     private string $password;
@@ -17,7 +23,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'string', nullable: true)]
     private ?string $email = null;
 
-    // inne pola, np. dla ról...
+
+    #[ORM\Column(type: "string", nullable: true)]
+    private ?string $googleAuthenticatorSecret;
 
     public function getPassword(): string
     {
@@ -57,5 +65,25 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(?string $email): void
     {
         $this->email = $email;
+    }
+
+    public function isGoogleAuthenticatorEnabled(): bool
+    {
+        return null !== $this->googleAuthenticatorSecret;
+    }
+
+    public function getGoogleAuthenticatorUsername(): string
+    {
+        return $this->email;
+    }
+
+    public function getGoogleAuthenticatorSecret(): ?string
+    {
+        return $this->googleAuthenticatorSecret;
+    }
+
+    public function setGoogleAuthenticatorSecret(?string $googleAuthenticatorSecret): void
+    {
+        $this->googleAuthenticatorSecret = $googleAuthenticatorSecret;
     }
 }
