@@ -12,20 +12,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Id, ORM\GeneratedValue, ORM\Column(type: 'integer')]
     private int $id;
 
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
     #[ORM\Column(type: 'string')]
     private string $password;
 
     #[ORM\Column(type: 'string', nullable: true)]
     private ?string $email = null;
 
+    #[ORM\Column(type: 'string', nullable: true)]
+    private ?string $login = null;
+
+    #[ORM\Column(type: 'json')]
+    private ?array $roles = [];
 
     #[ORM\Column(type: "string", nullable: true)]
     private ?string $googleAuthenticatorSecret;
+    public function __construct()
+    {
+        $this->roles = ["ROLE_USER"];
+    }
+
+    public function getId(): int
+    {
+        return $this->id;
+    }
 
     public function getPassword(): string
     {
@@ -34,7 +43,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
 
     public function getRoles(): array
     {
-        return ['ROLE_USER']; // Można dostosować w zależności od potrzeb
+        return $this->roles; // Można dostosować w zależności od potrzeb
     }
 
     public function eraseCredentials(): void
@@ -85,5 +94,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setGoogleAuthenticatorSecret(?string $googleAuthenticatorSecret): void
     {
         $this->googleAuthenticatorSecret = $googleAuthenticatorSecret;
+    }
+
+    public function setRoles(array $roles): void
+    {
+        $this->roles = $roles;
+    }
+
+    public function getLogin(): ?string
+    {
+        return $this->login;
+    }
+
+    public function setLogin(?string $login): void
+    {
+        $this->login = $login;
     }
 }
